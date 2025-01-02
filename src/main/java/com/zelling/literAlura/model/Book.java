@@ -3,26 +3,26 @@ package com.zelling.literAlura.model;
 import jakarta.persistence.*;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 public class Book {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
-
     Integer apiId;
-
     @Column(unique = true)
     String title;
     List<String> subjects;
     @ManyToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-    List<Author> authors = new ArrayList<>();
+    Set<Author> authors = new HashSet<>();
     List<String> languages = new ArrayList<>();
 
     public Book(){}
 
-    public Book(Integer apiId,String title, List<String> subjects, List<Author> authors, List<String> languages) {
+    public Book(Integer apiId,String title, List<String> subjects, HashSet<Author> authors, List<String> languages) {
         this.apiId = apiId;
         this.title = title;
         this.subjects = subjects;
@@ -33,7 +33,7 @@ public class Book {
     public Book(BookData data){
         this.title = data.title();
         this.subjects = data.subjects();
-        this.authors = new ArrayList<>();
+        this.authors = new HashSet<>();
         for (Person person : data.authors()){
             this.authors.add(new Author(person.name(), person.birthYear(), person.deathYear()));
         }
@@ -64,11 +64,11 @@ public class Book {
         this.subjects = subjects;
     }
 
-    public List<Author> getAuthors() {
+    public Set<Author> getAuthors() {
         return authors;
     }
 
-    public void setAuthors(List<Author> authors) {
+    public void setAuthors(Set<Author> authors) {
         this.authors = authors;
     }
 
@@ -78,5 +78,13 @@ public class Book {
 
     public void setLanguages(List<String> languages) {
         this.languages = languages;
+    }
+
+    public Integer getApiId() {
+        return apiId;
+    }
+
+    public void setApiId(Integer apiId) {
+        this.apiId = apiId;
     }
 }

@@ -2,8 +2,10 @@ package com.zelling.literAlura.model;
 
 import jakarta.persistence.*;
 
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
+@Entity
 public class Author {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -14,6 +16,14 @@ public class Author {
 
     Integer birthYear;
     Integer deathYear;
+
+    @ManyToMany(targetEntity = Book.class, fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @JoinTable(
+            name = "author_book",
+            joinColumns = @JoinColumn(name = "author_id"),
+            inverseJoinColumns = @JoinColumn(name = "book_id")
+    )
+    Set<Book> books = new HashSet<>();
 
     public Author(){}
 

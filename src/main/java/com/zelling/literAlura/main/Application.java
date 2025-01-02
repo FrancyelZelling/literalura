@@ -5,6 +5,7 @@ import com.zelling.literAlura.model.Book;
 import com.zelling.literAlura.model.BookDataResponse;
 import com.zelling.literAlura.repository.AuthorRepository;
 import com.zelling.literAlura.repository.BookRepository;
+import com.zelling.literAlura.service.BookService;
 import com.zelling.literAlura.utils.Api;
 import com.zelling.literAlura.utils.Converter;
 import com.zelling.literAlura.utils.UI;
@@ -17,6 +18,7 @@ import java.util.stream.Collectors;
 
 public class Application {
     private BookRepository bookRepository;
+    private BookService bookService;
     private AuthorRepository authorRepository;
     private final UI ui = new UI();
     private final Api api = new Api();
@@ -24,9 +26,10 @@ public class Application {
     private final Scanner scanner = new Scanner(System.in);
     private int option = -1;
 
-    public Application(BookRepository bookRepository, AuthorRepository authorRepository) {
+    public Application(BookRepository bookRepository, AuthorRepository authorRepository, BookService bookService) {
         this.bookRepository = bookRepository;
         this.authorRepository = authorRepository;
+        this.bookService = bookService;
     }
 
     public void app() {
@@ -69,36 +72,16 @@ public class Application {
         var bookResponse = converter.convertData(json, BookDataResponse.class);
 
         if (bookResponse.count() > 0) {
-            List<String> authorList = authorRepository.findAll().stream()
-                    .map(Author::getName)
+            List<Book> bookList = bookResponse.books().stream()
+                    .map(Book::new)
                     .toList();
 
-            var bookList = bookResponse.books();
-            var filteredBooks = bookList.stream()
-                            .map(book -> book.authors().stream().filter(author -> authorList.contains(author.name())))
-                            .toList();
+            bookList.forEach(book -> bookService.saveBook(book));
 
-            System.out.println("bookList");
-            bookList.forEach(System.out::println);
-            System.out.println("filtered");
-            filteredBooks.forEach(book -> book.forEach(System.out::println));
-//            bookRepository.saveAllAndFlush(bookList);
         } else {
             System.out.println("livro ou autor não encontrado");
         }
 
-    }
-
-    public void saveListToDb(List<Book> list) {
-        list.forEach(b -> {
-            if (b.getId() != null) {
-                boolean exists = bookRepository.existsById(b.getId());
-
-                if (!exists) {
-                    bookRepository.save(b);
-                }
-            }
-        });
     }
 
     public void listBooks() {
@@ -124,8 +107,21 @@ public class Application {
 
         List<Author> authors = authorRepository.findAll();
 
-        List<Author> aliveAuthors = authors.stream().filter(author -> author.getBirthYear() < year && author.getDeathYear() > year)
+        List<Author> aliveAuthors = authors.stream()
+                .filter(author -> {
+                    var birthYear = author.getBirthYear();
+                    var deathYear = author.getDeathYear();
+
+                    if(birthYear != null && birthYear < year){
+                        if (deathYear == null || deathYear > year){
+                            return true;
+                        }
+                    }
+
+                    return false;
+                })
                 .toList();
+
 
         aliveAuthors.forEach(System.out::println);
     }
